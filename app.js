@@ -3,6 +3,9 @@ const app = express();
 const exhbs = require("express-handlebars");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+var methodOverride = require("method-override");
+const session = require("express-session");
+const flash = require("connect-flash");
 
 const PORT = process.env.PORT || 5000;
 
@@ -29,8 +32,28 @@ app.engine(
   })
 );
 app.set("view engine", "handlebars");
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(methodOverride("_method"));
+
+app.use(
+  session({
+    secret: "secret",
+    resave: true,
+    saveUninitialized: true
+  })
+);
+
+app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  res.locals.error = req.flash("error");
+  next();
+});
 
 require("./models/Ideas");
 const Idea = mongoose.model("Ideas");
@@ -43,6 +66,29 @@ app.get("/about", (req, res) => {
   res.render("about");
 });
 
+app.put("/ideas/edit/:id", (req, res) => {
+  Idea.findOne({
+    _id: req.params.id
+  }).then(idea => {
+    idea.title = req.body.title;
+    idea.details = req.body.details;
+
+    idea.save().then(() => {
+      req.flash("success_msg", "Video updated Successfully");
+      res.redirect("/ideas");
+    });
+  });
+});
+
+app.delete("/ideas/:id", (req, res) => {
+  Idea.deleteOne({
+    _id: req.params.id
+  }).then(() => {
+    req.flash("success_msg", "Video Deleted Successfully");
+    res.redirect("/ideas");
+  });
+});
+
 app.get("/ideas", (req, res) => {
   Idea.find({})
     .sort({ date: "desc" })
@@ -51,6 +97,16 @@ app.get("/ideas", (req, res) => {
         ideas: ideas
       });
     });
+});
+
+app.get("/ideas/edit/:id", (req, res) => {
+  Idea.findOne({
+    _id: req.params.id
+  }).then(idea => {
+    res.render("ideas/edit", {
+      idea: idea
+    });
+  });
 });
 
 app.get("/ideas/add", (req, res) => {
@@ -81,7 +137,7 @@ app.post("/ideas", (req, res) => {
       details: req.body.details
     };
     new Idea(newUser).save().then(idea => {
-      console.log("Idea inserted successfuly: " + idea);
+      req.flash("success_msg", "Video Added Successfully");
       res.redirect("/ideas");
     });
   }

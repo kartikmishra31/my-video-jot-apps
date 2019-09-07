@@ -4,7 +4,7 @@
   "description": "This is an appliation to record vaious video ideas...",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "node app.js"
   },
   "author": "Kartik Mishra",
   "license": "MIT",

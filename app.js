@@ -4,7 +4,7 @@ const exhbs = require("express-handlebars");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 mongoose.Promise = global.Promise;
 
